@@ -1,6 +1,8 @@
 # Language Translation Tool
 
-**Live demo:** *(link will be added after deployment)*
+**GitHub:** https://github.com/Nathenael11/CodeAlpha_LanguageTranslationTool
+
+**Live demo:** *(deploying — link coming shortly)*
 
 Built by Nathenael Ermias
 
