@@ -2,7 +2,7 @@
 
 **GitHub:** https://github.com/Nathenael11/LanguageTranslationTool
 
-**Live demo:** *(link will be added after deployment)*
+**Live demo:** https://languagetranslationtool-zki9hewgtnzxc7hnindfqt.streamlit.app
 
 Built by Nathenael Ermias
 
