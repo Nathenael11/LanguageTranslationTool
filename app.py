@@ -1,47 +1,48 @@
 # Author: Nathenael Ermias
 # Language Translation Tool — CodeAlpha Internship Project
-# Uses Google Cloud Translation API v2 for translation and gTTS for text-to-speech
+# Uses deep-translator (Google Translate API wrapper) for translation
+# and gTTS for text-to-speech playback.
 
 import io
 import base64
 
-import requests
 import streamlit as st
+from deep_translator import GoogleTranslator
 from gtts import gTTS
 
 # ─── Language config ─────────────────────────────────────────────────────────
 
 LANGUAGES = {
-    "Afrikaans":            "af",
-    "Arabic":               "ar",
-    "Bengali":              "bn",
-    "Chinese (Simplified)": "zh-CN",
-    "Chinese (Traditional)":"zh-TW",
-    "Dutch":                "nl",
-    "English":              "en",
-    "French":               "fr",
-    "German":               "de",
-    "Greek":                "el",
-    "Hindi":                "hi",
-    "Indonesian":           "id",
-    "Italian":              "it",
-    "Japanese":             "ja",
-    "Korean":               "ko",
-    "Malay":                "ms",
-    "Persian":              "fa",
-    "Polish":               "pl",
-    "Portuguese":           "pt",
-    "Romanian":             "ro",
-    "Russian":              "ru",
-    "Spanish":              "es",
-    "Swahili":              "sw",
-    "Swedish":              "sv",
-    "Tamil":                "ta",
-    "Thai":                 "th",
-    "Turkish":              "tr",
-    "Ukrainian":            "uk",
-    "Urdu":                 "ur",
-    "Vietnamese":           "vi",
+    "Afrikaans":             "af",
+    "Arabic":                "ar",
+    "Bengali":               "bn",
+    "Chinese (Simplified)":  "zh-CN",
+    "Chinese (Traditional)": "zh-TW",
+    "Dutch":                 "nl",
+    "English":               "en",
+    "French":                "fr",
+    "German":                "de",
+    "Greek":                 "el",
+    "Hindi":                 "hi",
+    "Indonesian":            "id",
+    "Italian":               "it",
+    "Japanese":              "ja",
+    "Korean":                "ko",
+    "Malay":                 "ms",
+    "Persian":               "fa",
+    "Polish":                "pl",
+    "Portuguese":            "pt",
+    "Romanian":              "ro",
+    "Russian":               "ru",
+    "Spanish":               "es",
+    "Swahili":               "sw",
+    "Swedish":               "sv",
+    "Tamil":                 "ta",
+    "Thai":                  "th",
+    "Turkish":               "tr",
+    "Ukrainian":             "uk",
+    "Urdu":                  "ur",
+    "Vietnamese":            "vi",
 }
 
 LANGUAGE_NAMES = list(LANGUAGES.keys())
@@ -53,55 +54,25 @@ GTTS_SUPPORTED = {
     "sw", "sv", "ta", "th", "tr", "uk", "vi",
 }
 
-# Google Cloud Translation API v2 endpoint
-GOOGLE_TRANSLATE_URL = "https://translation.googleapis.com/language/translate/v2"
-GOOGLE_DETECT_URL    = "https://translation.googleapis.com/language/translate/v2/detect"
 
+# ─── Translation & TTS helpers ────────────────────────────────────────────────
 
-# ─── Helper functions ─────────────────────────────────────────────────────────
-
-def get_api_key() -> str:
+def translate_text(text: str, source_lang: str, target_lang: str) -> str:
     """
-    Read the Google Cloud Translation API key from Streamlit secrets.
-    Works both locally (via .streamlit/secrets.toml) and on Streamlit Cloud
-    (via the Secrets panel in the app settings dashboard).
-    """
-    try:
-        return st.secrets["GOOGLE_TRANSLATE_API_KEY"]
-    except (KeyError, FileNotFoundError):
-        st.error(
-            "❌ API key not found. Add `GOOGLE_TRANSLATE_API_KEY` to your "
-            "Streamlit secrets (`.streamlit/secrets.toml` locally, or the "
-            "Secrets panel on Streamlit Community Cloud)."
-        )
-        st.stop()
-
-
-def translate_text(text: str, source_lang: str, target_lang: str, api_key: str) -> str:
-    """
-    Translate *text* from source_lang to target_lang using the
-    Google Cloud Translation REST API v2 (Basic tier).
+    Translate *text* from source_lang to target_lang via the
+    Google Translate API (accessed through deep-translator's GoogleTranslator).
 
     Returns the translated string.
-    Raises requests.HTTPError on a non-2xx response.
+    Raises an exception on network or API failure — handled in the UI layer.
     """
-    params = {
-        "q":      text,
-        "source": source_lang,
-        "target": target_lang,
-        "format": "text",
-        "key":    api_key,
-    }
-    resp = requests.post(GOOGLE_TRANSLATE_URL, params=params, timeout=10)
-    resp.raise_for_status()
-    data = resp.json()
-    return data["data"]["translations"][0]["translatedText"]
+    translator = GoogleTranslator(source=source_lang, target=target_lang)
+    return translator.translate(text)
 
 
 def generate_audio(text: str, lang_code: str) -> bytes:
     """
-    Generate MP3 audio for *text* in *lang_code* using gTTS.
-    Returns raw MP3 bytes (no temp files written to disk).
+    Generate MP3 audio bytes for *text* using gTTS.
+    No temp files are written to disk — audio is returned as raw bytes.
     """
     tts = gTTS(text=text, lang=lang_code, slow=False)
     buf = io.BytesIO()
@@ -111,12 +82,12 @@ def generate_audio(text: str, lang_code: str) -> bytes:
 
 
 def audio_to_data_uri(mp3_bytes: bytes) -> str:
-    """Encode MP3 bytes as a base64 data URI for inline HTML playback."""
+    """Encode raw MP3 bytes as a base64 data URI for inline browser playback."""
     b64 = base64.b64encode(mp3_bytes).decode("utf-8")
     return f"data:audio/mpeg;base64,{b64}"
 
 
-# ─── Page setup ──────────────────────────────────────────────────────────────
+# ─── Page setup ───────────────────────────────────────────────────────────────
 
 st.set_page_config(
     page_title="Language Translation Tool",
@@ -126,7 +97,7 @@ st.set_page_config(
 
 st.title("🌐 Language Translation Tool")
 st.markdown("*Built by Nathenael Ermias*")
-st.markdown("Powered by **Google Cloud Translation API v2**")
+st.markdown("Powered by **Google Translate API** via deep-translator")
 st.markdown("---")
 
 # ─── Language selectors ───────────────────────────────────────────────────────
@@ -162,7 +133,7 @@ translate_btn = st.button("🌐 Translate", type="primary", use_container_width=
 
 st.markdown("---")
 
-# ─── Translation ──────────────────────────────────────────────────────────────
+# ─── Translation logic ────────────────────────────────────────────────────────
 
 if translate_btn:
     if not input_text or not input_text.strip():
@@ -172,28 +143,17 @@ if translate_btn:
         st.info("ℹ️ Source and target languages are the same — nothing to translate.")
 
     else:
-        api_key = get_api_key()
-        with st.spinner("Sending request to Google Cloud Translation API…"):
+        with st.spinner("Sending text to Google Translate API…"):
             try:
-                translated = translate_text(
-                    input_text.strip(), source_code, target_code, api_key
-                )
-                st.session_state["translated"]   = translated
-                st.session_state["target_code"]  = target_code
-                st.session_state["target_name"]  = target_name
-            except requests.HTTPError as e:
-                status = e.response.status_code if e.response is not None else "unknown"
-                st.error(
-                    f"❌ Google Translate API returned HTTP {status}. "
-                    f"Check that your API key is valid and the Cloud Translation API "
-                    f"is enabled in your Google Cloud project.\n\nDetail: {e}"
-                )
-                st.session_state.pop("translated", None)
-            except requests.ConnectionError:
-                st.error("❌ Network error — could not reach the Google Translate API. Check your internet connection.")
-                st.session_state.pop("translated", None)
+                translated = translate_text(input_text.strip(), source_code, target_code)
+                st.session_state["translated"]  = translated
+                st.session_state["target_code"] = target_code
+                st.session_state["target_name"] = target_name
             except Exception as e:
-                st.error(f"❌ Unexpected error: {e}")
+                st.error(
+                    f"❌ Translation failed. This is usually a network issue or an "
+                    f"unsupported language pair.\n\nError detail: {e}"
+                )
                 st.session_state.pop("translated", None)
 
 # ─── Display result ───────────────────────────────────────────────────────────
@@ -205,7 +165,7 @@ if "translated" in st.session_state and st.session_state["translated"]:
 
     st.subheader(f"✅ Translation ({result_lang})")
 
-    # Read-only output box
+    # Read-only output text area
     st.text_area(
         label="translated_output",
         value=translated_text,
@@ -214,7 +174,7 @@ if "translated" in st.session_state and st.session_state["translated"]:
         label_visibility="collapsed",
     )
 
-    # ── Copy to clipboard ──────────────────────────────────────────────────
+    # ── Copy to clipboard ─────────────────────────────────────────────────
     safe_text = translated_text.replace("\\", "\\\\").replace("`", "\\`").replace("$", "\\$")
     copy_js = f"""
     <script>
@@ -222,10 +182,10 @@ if "translated" in st.session_state and st.session_state["translated"]:
         const text = `{safe_text}`;
         navigator.clipboard.writeText(text).then(function() {{
             const btn = document.getElementById('copy-btn');
-            btn.innerText = '✅ Copied!';
+            btn.innerText = '\u2705 Copied!';
             btn.style.background = '#388E3C';
             setTimeout(() => {{
-                btn.innerText = '📋 Copy to clipboard';
+                btn.innerText = '\U0001f4cb Copy to clipboard';
                 btn.style.background = '#4CAF50';
             }}, 2000);
         }}, function(err) {{
@@ -236,14 +196,13 @@ if "translated" in st.session_state and st.session_state["translated"]:
     <button id="copy-btn"
         onclick="copyTranslation()"
         style="background:#4CAF50;color:white;border:none;padding:9px 20px;
-               border-radius:6px;cursor:pointer;font-size:14px;font-weight:500;
-               transition:background 0.2s;">
-        📋 Copy to clipboard
+               border-radius:6px;cursor:pointer;font-size:14px;font-weight:500;">
+        \U0001f4cb Copy to clipboard
     </button>
     """
     st.components.v1.html(copy_js, height=55)
 
-    # ── Text-to-speech ────────────────────────────────────────────────────
+    # ── Text-to-speech playback ───────────────────────────────────────────
     if result_code in GTTS_SUPPORTED:
         if st.button("🔊 Play translation (text-to-speech)", use_container_width=False):
             with st.spinner("Generating audio…"):
@@ -265,7 +224,8 @@ if "translated" in st.session_state and st.session_state["translated"]:
 
 st.markdown("---")
 st.caption(
-    "Translation: [Google Cloud Translation API v2](https://cloud.google.com/translate/docs/basic/translating-text) · "
+    "Translation: [Google Translate API](https://cloud.google.com/translate) "
+    "via [deep-translator](https://github.com/nidhaloff/deep-translator) · "
     "TTS: [gTTS](https://github.com/pndurette/gTTS) · "
     "Built by Nathenael Ermias"
 )
