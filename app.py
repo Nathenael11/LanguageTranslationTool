@@ -1,14 +1,13 @@
 # Author: Nathenael Ermias
 # Language Translation Tool — CodeAlpha Internship Project
-# Uses deep-translator (Google Translate API wrapper) for translation
+# Uses MyMemory Translation API (free) for translation
 # and gTTS for text-to-speech playback.
 
 import io
 import base64
+import requests
 
 import streamlit as st
-from deep_translator import GoogleTranslator
-from deep_translator.exceptions import TranslationNotFound
 from gtts import gTTS
 
 # ─── Language config ─────────────────────────────────────────────────────────
@@ -61,14 +60,38 @@ GTTS_SUPPORTED = {
 
 def translate_text(text: str, source_lang: str, target_lang: str) -> str:
     """
-    Translate *text* from source_lang to target_lang via the
-    Google Translate API (accessed through deep-translator's GoogleTranslator).
+    Translate *text* using the MyMemory Translation API — a free, documented
+    REST API that requires no API key and has no per-second rate limits.
 
+    API docs: https://mymemory.translated.net/doc/spec.php
+    Lang pair format: 'en|es', 'en|am', etc.
     Returns the translated string.
-    Raises an exception on network or API failure — handled in the UI layer.
     """
-    translator = GoogleTranslator(source=source_lang, target=target_lang)
-    return translator.translate(text)
+    # MyMemory uses BCP-47 codes joined by a pipe
+    # zh-CN and zh-TW need to be mapped to zh-CHS / zh-CHT for MyMemory
+    MYMEMORY_CODE_MAP = {
+        "zh-CN": "zh-CHS",
+        "zh-TW": "zh-CHT",
+    }
+    src = MYMEMORY_CODE_MAP.get(source_lang, source_lang)
+    tgt = MYMEMORY_CODE_MAP.get(target_lang, target_lang)
+
+    url = "https://api.mymemory.translated.net/get"
+    params = {
+        "q":        text,
+        "langpair": f"{src}|{tgt}",
+    }
+    resp = requests.get(url, params=params, timeout=10)
+    resp.raise_for_status()
+    data = resp.json()
+
+    if data.get("responseStatus") != 200:
+        raise ValueError(data.get("responseDetails", "Translation not found."))
+
+    translated = data["responseData"]["translatedText"]
+    if not translated or translated.upper() == text.upper():
+        raise ValueError("No translation returned.")
+    return translated
 
 
 def generate_audio(text: str, lang_code: str) -> bytes:
@@ -99,7 +122,7 @@ st.set_page_config(
 
 st.title("🌐 Language Translation Tool")
 st.markdown("*Built by Nathenael Ermias*")
-st.markdown("Powered by **Google Translate API** via deep-translator")
+st.markdown("Powered by **MyMemory Translation API** & **gTTS**")
 st.markdown("---")
 
 # ─── Language selectors ───────────────────────────────────────────────────────
@@ -154,17 +177,17 @@ if translate_btn:
                 st.session_state["translated"]  = translated
                 st.session_state["target_code"] = target_code
                 st.session_state["target_name"] = target_name
-            except TranslationNotFound:
+            except (ValueError, requests.HTTPError):
                 st.warning(
                     "⚠️ Google Translate could not produce a result for this input. "
-                    "Try using a longer phrase, checking the spelling, or switching the source language."
+                    "Try rephrasing your text or selecting a different source language."
                 )
                 st.session_state.pop("translated", None)
+            except requests.ConnectionError:
+                st.error("❌ Network error — could not reach Google Translate. Check your internet connection.")
+                st.session_state.pop("translated", None)
             except Exception as e:
-                st.error(
-                    f"❌ Translation failed due to a network or API error. "
-                    f"Please check your internet connection and try again.\n\nDetail: {e}"
-                )
+                st.error(f"❌ Unexpected error: {e}")
                 st.session_state.pop("translated", None)
 
 # ─── Display result ───────────────────────────────────────────────────────────
@@ -235,8 +258,7 @@ if "translated" in st.session_state and st.session_state["translated"]:
 
 st.markdown("---")
 st.caption(
-    "Translation: [Google Translate API](https://cloud.google.com/translate) "
-    "via [deep-translator](https://github.com/nidhaloff/deep-translator) · "
+    "Translation: [MyMemory Translation API](https://mymemory.translated.net) · "
     "TTS: [gTTS](https://github.com/pndurette/gTTS) · "
     "Built by Nathenael Ermias"
 )
