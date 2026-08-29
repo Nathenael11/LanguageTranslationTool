@@ -14,6 +14,7 @@ from gtts import gTTS
 
 LANGUAGES = {
     "Afrikaans":             "af",
+    "Amharic":               "am",
     "Arabic":                "ar",
     "Bengali":               "bn",
     "Chinese (Simplified)":  "zh-CN",

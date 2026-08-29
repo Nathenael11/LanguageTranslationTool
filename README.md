@@ -83,9 +83,9 @@ Not all 30 languages are supported by gTTS. If the target language doesn't suppo
 
 ---
 
-## Supported languages (30 total)
+## Supported languages (31 total)
 
-Afrikaans, Arabic, Bengali, Chinese (Simplified), Chinese (Traditional), Dutch, English, French, German, Greek, Hindi, Indonesian, Italian, Japanese, Korean, Malay, Persian, Polish, Portuguese, Romanian, Russian, Spanish, Swahili, Swedish, Tamil, Thai, Turkish, Ukrainian, Urdu, Vietnamese.
+Afrikaans, Amharic, Arabic, Bengali, Chinese (Simplified), Chinese (Traditional), Dutch, English, French, German, Greek, Hindi, Indonesian, Italian, Japanese, Korean, Malay, Persian, Polish, Portuguese, Romanian, Russian, Spanish, Swahili, Swedish, Tamil, Thai, Turkish, Ukrainian, Urdu, Vietnamese.
 
 ---
 
