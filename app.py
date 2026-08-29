@@ -8,6 +8,7 @@ import base64
 
 import streamlit as st
 from deep_translator import GoogleTranslator
+from deep_translator.exceptions import TranslationNotFound
 from gtts import gTTS
 
 # ─── Language config ─────────────────────────────────────────────────────────
@@ -140,6 +141,9 @@ if translate_btn:
     if not input_text or not input_text.strip():
         st.warning("⚠️ Please enter some text before clicking Translate.")
 
+    elif len(input_text.strip()) < 2:
+        st.warning("⚠️ The text is too short to translate. Please enter at least 2 characters.")
+
     elif source_code == target_code:
         st.info("ℹ️ Source and target languages are the same — nothing to translate.")
 
@@ -150,10 +154,16 @@ if translate_btn:
                 st.session_state["translated"]  = translated
                 st.session_state["target_code"] = target_code
                 st.session_state["target_name"] = target_name
+            except TranslationNotFound:
+                st.warning(
+                    "⚠️ Google Translate could not produce a result for this input. "
+                    "Try using a longer phrase, checking the spelling, or switching the source language."
+                )
+                st.session_state.pop("translated", None)
             except Exception as e:
                 st.error(
-                    f"❌ Translation failed. This is usually a network issue or an "
-                    f"unsupported language pair.\n\nError detail: {e}"
+                    f"❌ Translation failed due to a network or API error. "
+                    f"Please check your internet connection and try again.\n\nDetail: {e}"
                 )
                 st.session_state.pop("translated", None)
 
