@@ -1,6 +1,6 @@
 # Language Translation Tool
 
-**GitHub:** https://github.com/Nathenael11/LanguageTranslationTool
+**GitHub:** https://github.com/Nathenael11/CodeAlpha_LanguageTranslationTool
 
 **Live demo:** https://languagetranslationtool-zki9hewgtnzxc7hnindfqt.streamlit.app
 
@@ -23,8 +23,8 @@ Built as part of the CodeAlpha internship.
 1. Clone the repo:
 
 ```bash
-git clone https://github.com/Nathenael11/LanguageTranslationTool.git
-cd LanguageTranslationTool
+git clone https://github.com/Nathenael11/CodeAlpha_LanguageTranslationTool.git
+cd CodeAlpha_LanguageTranslationTool
 ```
 
 2. Create and activate a virtual environment (optional but recommended):
@@ -56,7 +56,7 @@ Then open `http://localhost:8501` in your browser.
 ## Project structure
 
 ```
-LanguageTranslationTool/
+CodeAlpha_LanguageTranslationTool/
 ├── app.py              # Main Streamlit application
 ├── requirements.txt    # Python dependencies (pinned versions)
 ├── README.md           # This file
